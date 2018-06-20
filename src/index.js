@@ -7,6 +7,13 @@ import TileLayer from 'ol/layer/tile'
 import VectorLayer from 'ol/layer/vector'
 import OSM from 'ol/source/osm'
 import Vector from 'ol/source/vector'
+import Transform from 'ol-ext/interaction/transform'
+
+export const interactiveModes = [
+  'rectangle',
+  'polygons',
+  'transform',
+]
 
 class InteractiveMap extends React.Component {
 
@@ -34,13 +41,20 @@ class InteractiveMap extends React.Component {
       }),
     })
 
-    this.draw = new Draw({
+    this.rectangles = new Draw({
       source: this.vector,
       type: 'Circle',
       geometryFunction: Draw.createBox(),
     })
 
-    this.map.addInteraction(this.draw)
+    this.polygons = new Draw({
+      source: this.vector,
+      type: 'Polygon',
+    })
+
+    this.transform = new Transform({
+      rotate: true,
+    })
 
     this.vector.on('change', ({ target }) => {
       const items = target.featuresRtree_.items_
@@ -54,6 +68,44 @@ class InteractiveMap extends React.Component {
         type: 'Polygon',
       })))
     })
+
+    this.handleInteractionChange(this.props)
+  }
+
+  componentWillReceiveProps (newProps) {
+    if (newProps.selectedMode !== this.props.selectedMode) {
+      this.handleInteractionChange(newProps)
+    }
+  }
+
+  handleInteractionChange (props) {
+    this.removeInteractions()
+    switch (props.selectedMode) {
+      case 'rectangle':
+        return this.toggleToRectangleMode()
+      case 'polygons':
+        return this.toggleToPolygonsMode()
+      case 'transform':
+        return this.toggleToTransformMode()
+    }
+  }
+
+  removeInteractions () {
+    this.map.removeInteraction(this.polygons)
+    this.map.removeInteraction(this.rectangles)
+    this.map.removeInteraction(this.transform)
+  }
+
+  toggleToPolygonsMode () {
+    this.map.addInteraction(this.polygons)
+  }
+
+  toggleToRectangleMode () {
+    this.map.addInteraction(this.rectangles)
+  }
+
+  toggleToTransformMode () {
+    this.map.addInteraction(this.transform)
   }
 
   render () {
@@ -72,12 +124,14 @@ InteractiveMap.propTypes = {
   defaultCoordinates: PropTypes.arrayOf(PropTypes.number),
   defaultZoom: PropTypes.number,
   onVectorChange: PropTypes.func,
+  selectedMode: PropTypes.oneOf(interactiveModes),
 }
 
 InteractiveMap.defaultProps = {
   defaultCoordinates: [ 0, 0 ],
   defaultZoom: 5,
   onVectorChange: () => null,
+  selectedMode: interactiveModes[0],
 }
 
 export default InteractiveMap
