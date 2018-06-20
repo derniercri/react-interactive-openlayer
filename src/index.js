@@ -44,7 +44,15 @@ class InteractiveMap extends React.Component {
 
     this.vector.on('change', ({ target }) => {
       const items = target.featuresRtree_.items_
-      this.props.onVectorChange(Object.keys(items).map(key => items[key]))
+      this.props.onVectorChange(Object.keys(items).map(key => ({
+        coordinates: [
+          [items[key].minX, items[key].minY],
+          [items[key].maxX, items[key].minY],
+          [items[key].maxX, items[key].maxY],
+          [items[key].minX, items[key].maxY],
+        ],
+        type: 'Polygon',
+      })))
     })
   }
 

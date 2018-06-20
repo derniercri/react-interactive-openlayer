@@ -1,5 +1,5 @@
 {
-  "name": "interactive-map",
+  "name": "react-interactive-openlayer",
   "version": "0.1.0",
   "main": "build/index.js",
   "scripts": {
