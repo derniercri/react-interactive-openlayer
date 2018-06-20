@@ -11,9 +11,9 @@ import Vector from 'ol/source/vector'
 import Transform from 'ol-ext/interaction/transform'
 
 export const interactiveModes = [
-  'rectangle',
+  'rectangles',
   'polygons',
-  'transform',
+  'transformations',
 ]
 
 class InteractiveMap extends React.Component {
@@ -53,12 +53,12 @@ class InteractiveMap extends React.Component {
       type: 'Polygon',
     })
 
-    this.transform = new Transform({
+    this.transformations = new Transform({
       rotate: true,
     })
 
     this.vector.on('change', ({ target }) => {
-      const items = target.featuresRtree_.items_
+      const items = get(target, 'featuresRtree_.items_')
 
       this.props.onVectorChange(Object.keys(items).map(key => ({
         coordinates: chunk(get(items[key], 'value.values_.geometry.flatCoordinates'), 2),
@@ -77,32 +77,32 @@ class InteractiveMap extends React.Component {
 
   handleInteractionChange(props) {
     this.removeInteractions()
+
     switch (props.selectedMode) {
-      case 'rectangle':
-        return this.toggleToRectangleMode()
+      case 'rectangles':
+        return this.toggleToRectanglesMode()
       case 'polygons':
         return this.toggleToPolygonsMode()
-      case 'transform':
-        return this.toggleToTransformMode()
+      case 'transformations':
+        return this.toggleToTransformationsMode()
     }
   }
 
   removeInteractions() {
-    this.map.removeInteraction(this.polygons)
-    this.map.removeInteraction(this.rectangles)
-    this.map.removeInteraction(this.transform)
+    interactiveModes.forEach(mode =>
+      this.map.removeInteraction(this[mode]))
   }
 
   toggleToPolygonsMode() {
     this.map.addInteraction(this.polygons)
   }
 
-  toggleToRectangleMode() {
+  toggleToRectanglesMode() {
     this.map.addInteraction(this.rectangles)
   }
 
-  toggleToTransformMode() {
-    this.map.addInteraction(this.transform)
+  toggleToTransformationsMode() {
+    this.map.addInteraction(this.transformations)
   }
 
   render() {
