@@ -24,6 +24,7 @@
   "dependencies": {
     "css-loader": "^0.28.11",
     "file-loader": "^1.1.11",
+    "lodash": "^4.17.10",
     "ol": "^4.6.5",
     "ol-ext": "^2.0.4",
     "prop-types": "^15.6.1",

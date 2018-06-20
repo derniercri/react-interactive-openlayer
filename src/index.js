@@ -1,4 +1,5 @@
 import React from 'react'
+import { chunk, get } from 'lodash'
 import PropTypes from 'prop-types'
 import Map from 'ol/map'
 import View from 'ol/view'
@@ -17,13 +18,13 @@ export const interactiveModes = [
 
 class InteractiveMap extends React.Component {
 
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.id = Math.random().toString(36).substring(7)
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this.vector = new Vector({ wrapX: false })
     this.map = new Map({
       layers: [
@@ -58,13 +59,9 @@ class InteractiveMap extends React.Component {
 
     this.vector.on('change', ({ target }) => {
       const items = target.featuresRtree_.items_
+
       this.props.onVectorChange(Object.keys(items).map(key => ({
-        coordinates: [
-          [items[key].minX, items[key].minY],
-          [items[key].maxX, items[key].minY],
-          [items[key].maxX, items[key].maxY],
-          [items[key].minX, items[key].maxY],
-        ],
+        coordinates: chunk(get(items[key], 'value.values_.geometry.flatCoordinates'), 2),
         type: 'Polygon',
       })))
     })
@@ -72,13 +69,13 @@ class InteractiveMap extends React.Component {
     this.handleInteractionChange(this.props)
   }
 
-  componentWillReceiveProps (newProps) {
+  componentWillReceiveProps(newProps) {
     if (newProps.selectedMode !== this.props.selectedMode) {
       this.handleInteractionChange(newProps)
     }
   }
 
-  handleInteractionChange (props) {
+  handleInteractionChange(props) {
     this.removeInteractions()
     switch (props.selectedMode) {
       case 'rectangle':
@@ -90,25 +87,25 @@ class InteractiveMap extends React.Component {
     }
   }
 
-  removeInteractions () {
+  removeInteractions() {
     this.map.removeInteraction(this.polygons)
     this.map.removeInteraction(this.rectangles)
     this.map.removeInteraction(this.transform)
   }
 
-  toggleToPolygonsMode () {
+  toggleToPolygonsMode() {
     this.map.addInteraction(this.polygons)
   }
 
-  toggleToRectangleMode () {
+  toggleToRectangleMode() {
     this.map.addInteraction(this.rectangles)
   }
 
-  toggleToTransformMode () {
+  toggleToTransformMode() {
     this.map.addInteraction(this.transform)
   }
 
-  render () {
+  render() {
     return (
       <div
         id={this.id}
