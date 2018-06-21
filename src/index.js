@@ -39,6 +39,11 @@ class InteractiveMap extends React.Component {
       source: this.vector,
     })
 
+    this.view = new OLView({
+      center: this.props.center,
+      zoom: this.props.zoom,
+    })
+
     this.map = new OLMap({
       layers: [
         new OLTileLayer({
@@ -47,10 +52,7 @@ class InteractiveMap extends React.Component {
         this.vectorLayer,
       ],
       target: this.id,
-      view: new OLView({
-        center: this.props.defaultCoordinates,
-        zoom: this.props.defaultZoom,
-      }),
+      view: this.view,
     })
 
     this.rectangles = new OLDrawInteraction({
@@ -92,6 +94,12 @@ class InteractiveMap extends React.Component {
   componentWillReceiveProps(newProps) {
     if (newProps.selectedMode !== this.props.selectedMode) {
       this.handleInteractionChange(newProps)
+    }
+    if (newProps.center !== this.props.center) {
+      this.view.setCenter(newProps.center)
+    }
+    if (newProps.zoom !== this.props.zoom) {
+      this.view.setZoom(newProps.zoom)
     }
   }
 
@@ -138,19 +146,19 @@ class InteractiveMap extends React.Component {
 }
 
 InteractiveMap.propTypes = {
-  defaultCoordinates: PropTypes.arrayOf(PropTypes.number),
-  defaultZoom: PropTypes.number,
+  center: PropTypes.arrayOf(PropTypes.number),
   initialVector: PropTypes.array,
   onVectorChange: PropTypes.func,
   selectedMode: PropTypes.oneOf(interactiveModes),
+  zoom: PropTypes.number,
 }
 
 InteractiveMap.defaultProps = {
-  defaultCoordinates: [ 0, 0 ],
-  defaultZoom: 5,
+  center: [ 0, 0 ],
   initialVector: [],
   onVectorChange: () => null,
   selectedMode: interactiveModes[0],
+  zoom: 5,
 }
 
 export default InteractiveMap
