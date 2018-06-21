@@ -1,14 +1,22 @@
 import React from 'react'
-import { chunk, get } from 'lodash'
 import PropTypes from 'prop-types'
-import Map from 'ol/map'
-import View from 'ol/view'
-import Draw from 'ol/interaction/draw'
-import TileLayer from 'ol/layer/tile'
-import VectorLayer from 'ol/layer/vector'
-import OSM from 'ol/source/osm'
-import Vector from 'ol/source/vector'
-import Transform from 'ol-ext/interaction/transform'
+import { chunk, get } from 'lodash'
+
+import OLFeature from 'ol/feature'
+import OLMap from 'ol/map'
+import OLView from 'ol/view'
+
+import OLPolygonGeom from 'ol/geom/polygon'
+
+import OLDrawInteraction from 'ol/interaction/draw'
+
+import OLTileLayer from 'ol/layer/tile'
+import OLVectorLayer from 'ol/layer/vector'
+
+import OLOSMSource from 'ol/source/osm'
+import OLVectorSource from 'ol/source/vector'
+
+import OLTransformInteraction from 'ol-ext/interaction/transform'
 
 export const interactiveModes = [
   'rectangles',
@@ -25,36 +33,48 @@ class InteractiveMap extends React.Component {
   }
 
   componentDidMount() {
-    this.vector = new Vector({ wrapX: false })
-    this.map = new Map({
+    this.vector = new OLVectorSource({ wrapX: false })
+
+    this.vectorLayer = new OLVectorLayer({
+      source: this.vector,
+    })
+
+    this.map = new OLMap({
       layers: [
-        new TileLayer({
-          source: new OSM(),
+        new OLTileLayer({
+          source: new OLOSMSource(),
         }),
-        new VectorLayer({
-          source: this.vector,
-        }),
+        this.vectorLayer,
       ],
       target: this.id,
-      view: new View({
+      view: new OLView({
         center: this.props.defaultCoordinates,
         zoom: this.props.defaultZoom,
       }),
     })
 
-    this.rectangles = new Draw({
+    this.rectangles = new OLDrawInteraction({
       source: this.vector,
       type: 'Circle',
-      geometryFunction: Draw.createBox(),
+      geometryFunction: OLDrawInteraction.createBox(),
     })
 
-    this.polygons = new Draw({
+    this.polygons = new OLDrawInteraction({
       source: this.vector,
       type: 'Polygon',
     })
 
-    this.transformations = new Transform({
+    this.transformations = new OLTransformInteraction({
       rotate: true,
+    })
+
+    this.props.initialVector.forEach(shape => {
+      switch (shape.type) {
+        case 'Polygon':
+          return this.vectorLayer
+            .getSource()
+            .addFeature(new OLFeature(new OLPolygonGeom([ shape.coordinates ])))
+      }
     })
 
     this.vector.on('change', ({ target }) => {
@@ -120,6 +140,7 @@ class InteractiveMap extends React.Component {
 InteractiveMap.propTypes = {
   defaultCoordinates: PropTypes.arrayOf(PropTypes.number),
   defaultZoom: PropTypes.number,
+  initialVector: PropTypes.array,
   onVectorChange: PropTypes.func,
   selectedMode: PropTypes.oneOf(interactiveModes),
 }
@@ -127,6 +148,7 @@ InteractiveMap.propTypes = {
 InteractiveMap.defaultProps = {
   defaultCoordinates: [ 0, 0 ],
   defaultZoom: 5,
+  initialVector: [],
   onVectorChange: () => null,
   selectedMode: interactiveModes[0],
 }
