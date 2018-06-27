@@ -27,6 +27,9 @@ export const interactiveModes = [
 
 const geoJson = new OLGeoJSON()
 
+export const featureToGeoJson = feature =>
+  geoJson.writeFeature(feature)
+
 export const featuresToGeoJson = features =>
   geoJson.writeFeatures(features)
 

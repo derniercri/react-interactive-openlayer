@@ -31,6 +31,10 @@ import InteractiveMap, { featuresToGeoJson, geoJsonToFeatures, interactiveModes 
 
 ## Global Methods
 
+### `featureToGeoJson`
+
+Converts feature to GeoJSON
+
 ### `featuresToGeoJson`
 
 Converts features to GeoJSON
