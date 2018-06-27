@@ -1,12 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { chunk, get } from 'lodash'
 
-import OLFeature from 'ol/feature'
 import OLMap from 'ol/map'
 import OLView from 'ol/view'
 
-import OLPolygonGeom from 'ol/geom/polygon'
+import OLGeoJSON from 'ol/format/geojson'
 
 import OLDrawInteraction from 'ol/interaction/draw'
 
@@ -16,13 +14,24 @@ import OLVectorLayer from 'ol/layer/vector'
 import OLOSMSource from 'ol/source/osm'
 import OLVectorSource from 'ol/source/vector'
 
+import OLStyle from 'ol/style/style'
+import OLStrokeStyle from 'ol/style/stroke'
+
 import OLTransformInteraction from 'ol-ext/interaction/transform'
 
 export const interactiveModes = [
-  'rectangles',
   'polygons',
+  'rectangles',
   'transformations',
 ]
+
+const geoJson = new OLGeoJSON()
+
+export const featuresToGeoJson = features =>
+  geoJson.writeFeatures(features)
+
+export const geoJsonToFeatures = json =>
+  geoJson.readFeatures(json)
 
 class InteractiveMap extends React.Component {
 
@@ -34,6 +43,7 @@ class InteractiveMap extends React.Component {
 
   componentDidMount() {
     this.vector = new OLVectorSource({ wrapX: false })
+    this.vector.on('change', () => this.props.onFeaturesChange(this.vector.getFeatures()))
 
     this.vectorLayer = new OLVectorLayer({
       source: this.vector,
@@ -55,38 +65,29 @@ class InteractiveMap extends React.Component {
       view: this.view,
     })
 
+    // Interactions
     this.rectangles = new OLDrawInteraction({
+      geometryFunction: OLDrawInteraction.createBox(),
       source: this.vector,
       type: 'Circle',
-      geometryFunction: OLDrawInteraction.createBox(),
     })
+    this.rectangles.on('drawstart', e => this.setIdToFeature(e))
 
     this.polygons = new OLDrawInteraction({
       source: this.vector,
       type: 'Polygon',
     })
+    this.polygons.on('drawstart', e => this.setIdToFeature(e))
 
     this.transformations = new OLTransformInteraction({
       rotate: true,
     })
 
-    this.props.initialVector.forEach(shape => {
-      switch (shape.type) {
-        case 'Polygon':
-          return this.vectorLayer
-            .getSource()
-            .addFeature(new OLFeature(new OLPolygonGeom([ shape.coordinates ])))
-      }
-    })
-
-    this.vector.on('change', ({ target }) => {
-      const items = get(target, 'featuresRtree_.items_')
-
-      this.props.onVectorChange(Object.keys(items).map(key => ({
-        coordinates: chunk(get(items[key], 'value.values_.geometry.flatCoordinates'), 2),
-        type: 'Polygon',
-      })))
-    })
+    if (this.props.features) {
+      this.vectorLayer
+        .getSource()
+        .addFeatures(this.props.features)
+    }
 
     this.handleInteractionChange(this.props)
   }
@@ -114,6 +115,25 @@ class InteractiveMap extends React.Component {
       case 'transformations':
         return this.toggleToTransformationsMode()
     }
+  }
+
+  setIdToFeature({ feature }) {
+    feature.setId(this.vector.getFeatures().length)
+  }
+
+  highlightFeature(featureId) {
+    this.vector.getFeatures().forEach(feature => {
+      if (feature.getId() === featureId) {
+        feature.setStyle(new OLStyle({
+          stroke: new OLStrokeStyle({
+            color: 'red',
+            width: 5,
+          }),
+        }))
+      } else {
+        feature.setStyle(null)
+      }
+    })
   }
 
   removeInteractions() {
@@ -147,16 +167,16 @@ class InteractiveMap extends React.Component {
 
 InteractiveMap.propTypes = {
   center: PropTypes.arrayOf(PropTypes.number),
-  initialVector: PropTypes.array,
-  onVectorChange: PropTypes.func,
+  features: PropTypes.array,
+  onFeaturesChange: PropTypes.func,
   selectedMode: PropTypes.oneOf(interactiveModes),
   zoom: PropTypes.number,
 }
 
 InteractiveMap.defaultProps = {
   center: [ 0, 0 ],
-  initialVector: [],
-  onVectorChange: () => null,
+  features: [],
+  onFeaturesChange: () => null,
   selectedMode: interactiveModes[0],
   zoom: 5,
 }
