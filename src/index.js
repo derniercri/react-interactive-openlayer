@@ -136,6 +136,10 @@ class InteractiveMap extends React.Component {
     })
   }
 
+  removeHighlights() {
+    this.vector.getFeatures().forEach(feature => feature.setStyle(null))
+  }
+
   removeInteractions() {
     interactiveModes.forEach(mode =>
       this.map.removeInteraction(this[mode]))

@@ -27,6 +27,7 @@ import InteractiveMap, { featuresToGeoJson, geoJsonToFeatures, interactiveModes 
 | Method name | Params | Description |
 | --- | :---: | --- |
 | `highlightFeature` | `(featureId)` | Highlights a feature on the map |
+| `removeHighlights` |  | Remove all highlights on the map |
 
 ## Global Methods
 
