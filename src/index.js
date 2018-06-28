@@ -13,13 +13,40 @@ import OLDrawInteraction from 'ol/interaction/draw'
 import OLTileLayer from 'ol/layer/tile'
 import OLVectorLayer from 'ol/layer/vector'
 
-import OLOSMSource from 'ol/source/osm'
 import OLVectorSource from 'ol/source/vector'
+import OLWMTSSource from 'ol/source/wmts'
 
 import OLStyle from 'ol/style/style'
 import OLStrokeStyle from 'ol/style/stroke'
 
+import OLWMTSTileGrid from 'ol/tilegrid/wmts'
+
 import OLTransformInteraction from 'ol-ext/interaction/transform'
+
+const resolutions = [
+  156543.03392804103,
+  78271.5169640205,
+  39135.75848201024,
+  19567.879241005125,
+  9783.939620502562,
+  4891.969810251281,
+  2445.9849051256406,
+  1222.9924525628203,
+  611.4962262814101,
+  305.74811314070485,
+  152.87405657035254,
+  76.43702828517625,
+  38.218514142588134,
+  19.109257071294063,
+  9.554628535647034,
+  4.777314267823517,
+  2.3886571339117584,
+  1.1943285669558792,
+  0.5971642834779396,
+  0.29858214173896974,
+  0.14929107086948493,
+  0.07464553543474241,
+]
 
 export const interactiveModes = [
   'polygons',
@@ -72,7 +99,18 @@ class InteractiveMap extends React.Component {
     this.map = new OLMap({
       layers: [
         new OLTileLayer({
-          source: new OLOSMSource(),
+          source: new OLWMTSSource({
+            url: `https://wxs.ign.fr/${this.props.IGNKey}/geoportail/wmts`,
+            layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
+            matrixSet: 'PM',
+            format: 'image/jpeg',
+            style: 'normal',
+            tileGrid: new OLWMTSTileGrid({
+              origin: [ -20037508, 20037508 ], // topLeftCorner
+              resolutions: resolutions, // résolutions
+              matrixIds: [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19' ], // ids des TileMatrix
+            }),
+          }),
         }),
         this.vectorLayer,
       ],
@@ -188,6 +226,7 @@ class InteractiveMap extends React.Component {
 InteractiveMap.propTypes = {
   center: PropTypes.arrayOf(PropTypes.number),
   features: PropTypes.array,
+  IGNKey: PropTypes.string.isRequired,
   onFeaturesChange: PropTypes.func,
   selectedMode: PropTypes.oneOf(interactiveModes),
   zoom: PropTypes.number,
