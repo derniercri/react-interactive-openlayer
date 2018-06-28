@@ -1,6 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+import { chunk, get } from 'lodash'
+
 import OLMap from 'ol/map'
 import OLView from 'ol/view'
 
@@ -25,6 +27,15 @@ export const interactiveModes = [
   'transformations',
 ]
 
+const getCenterFromExtent = (extent) => {
+  const newExtent = chunk(extent, 2)
+
+  return [
+    (get(newExtent, '0.0') + get(newExtent, '1.0')) / 2,
+    (get(newExtent, '0.1') + get(newExtent, '1.1')) / 2,
+  ]
+}
+
 const geoJson = new OLGeoJSON()
 
 export const featureToGeoJson = feature =>
@@ -35,6 +46,7 @@ export const featuresToGeoJson = features =>
 
 export const geoJsonToFeatures = json =>
   geoJson.readFeatures(json)
+
 
 class InteractiveMap extends React.Component {
 
@@ -127,6 +139,7 @@ class InteractiveMap extends React.Component {
   highlightFeature(featureId) {
     this.vector.getFeatures().forEach(feature => {
       if (feature.getId() === featureId) {
+        this.view.setCenter(getCenterFromExtent(feature.getGeometry().getExtent()))
         feature.setStyle(new OLStyle({
           stroke: new OLStrokeStyle({
             color: 'red',
