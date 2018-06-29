@@ -49,6 +49,7 @@ const resolutions = [
 ]
 
 export const interactiveModes = [
+  'pins',
   'polygons',
   'rectangles',
   'transformations',
@@ -119,18 +120,24 @@ class InteractiveMap extends React.Component {
     })
 
     // Interactions
-    this.rectangles = new OLDrawInteraction({
-      geometryFunction: OLDrawInteraction.createBox(),
+    this.pins = new OLDrawInteraction({
       source: this.vector,
-      type: 'Circle',
+      type: 'Point',
     })
-    this.rectangles.on('drawstart', e => this.setIdToFeature(e))
+    this.pins.on('drawstart', e => this.setIdToFeature(e))
 
     this.polygons = new OLDrawInteraction({
       source: this.vector,
       type: 'Polygon',
     })
     this.polygons.on('drawstart', e => this.setIdToFeature(e))
+
+    this.rectangles = new OLDrawInteraction({
+      geometryFunction: OLDrawInteraction.createBox(),
+      source: this.vector,
+      type: 'Circle',
+    })
+    this.rectangles.on('drawstart', e => this.setIdToFeature(e))
 
     this.transformations = new OLTransformInteraction({
       rotate: true,
@@ -161,10 +168,12 @@ class InteractiveMap extends React.Component {
     this.removeInteractions()
 
     switch (props.selectedMode) {
-      case 'rectangles':
-        return this.toggleToRectanglesMode()
+      case 'pins':
+        return this.toggleToPinsMode()
       case 'polygons':
         return this.toggleToPolygonsMode()
+      case 'rectangles':
+        return this.toggleToRectanglesMode()
       case 'transformations':
         return this.toggleToTransformationsMode()
     }
@@ -197,6 +206,10 @@ class InteractiveMap extends React.Component {
   removeInteractions() {
     interactiveModes.forEach(mode =>
       this.map.removeInteraction(this[mode]))
+  }
+
+  toggleToPinsMode() {
+    this.map.addInteraction(this.pins)
   }
 
   toggleToPolygonsMode() {
