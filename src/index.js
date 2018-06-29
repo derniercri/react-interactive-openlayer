@@ -3,10 +3,13 @@ import PropTypes from 'prop-types'
 
 import { chunk, get } from 'lodash'
 
+import OLFeature from 'ol/feature'
 import OLMap from 'ol/map'
 import OLView from 'ol/view'
 
 import OLGeoJSON from 'ol/format/geojson'
+
+import OLPolygon from 'ol/geom/polygon'
 
 import OLDrawInteraction from 'ol/interaction/draw'
 
@@ -97,6 +100,7 @@ class InteractiveMap extends React.Component {
       center: this.props.center,
       zoom: this.props.zoom,
     })
+    this.view.on('change:center', () => this.props.onViewCenterChange(this.view.getCenter()))
 
     this.map = new OLMap({
       layers: [
@@ -137,7 +141,6 @@ class InteractiveMap extends React.Component {
 
     this.rectangles = new OLDrawInteraction({
       geometryFunction: OLDrawInteraction.createBox(),
-      source: this.vector,
       type: 'Circle',
     })
     this.rectangles.on('drawstart', e => this.setIdToFeature(e))
@@ -184,6 +187,15 @@ class InteractiveMap extends React.Component {
 
   setIdToFeature({ feature }) {
     feature.setId(this.vector.getFeatures().length)
+  }
+
+  createFeature(coordinates) {
+    const feature = new OLFeature({
+      geometry: new OLPolygon(coordinates),
+    })
+
+    this.setIdToFeature({ feature })
+    this.vector.addFeature(feature)
   }
 
   highlightFeature(featureId) {
@@ -244,6 +256,7 @@ InteractiveMap.propTypes = {
   features: PropTypes.array,
   IGNKey: PropTypes.oneOfType([ PropTypes.string, null ]),
   onFeaturesChange: PropTypes.func,
+  onViewCenterChange: PropTypes.func,
   selectedMode: PropTypes.oneOf(interactiveModes),
   zoom: PropTypes.number,
 }
@@ -253,6 +266,7 @@ InteractiveMap.defaultProps = {
   features: [],
   IGNKey: null,
   onFeaturesChange: () => null,
+  onViewCenterChange: () => null,
   selectedMode: interactiveModes[0],
   zoom: 5,
 }
