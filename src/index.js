@@ -13,6 +13,7 @@ import OLDrawInteraction from 'ol/interaction/draw'
 import OLTileLayer from 'ol/layer/tile'
 import OLVectorLayer from 'ol/layer/vector'
 
+import OLOSMSource from 'ol/source/osm'
 import OLVectorSource from 'ol/source/vector'
 import OLWMTSSource from 'ol/source/wmts'
 
@@ -100,18 +101,20 @@ class InteractiveMap extends React.Component {
     this.map = new OLMap({
       layers: [
         new OLTileLayer({
-          source: new OLWMTSSource({
-            url: `https://wxs.ign.fr/${this.props.IGNKey}/geoportail/wmts`,
-            layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
-            matrixSet: 'PM',
-            format: 'image/jpeg',
-            style: 'normal',
-            tileGrid: new OLWMTSTileGrid({
-              origin: [ -20037508, 20037508 ], // topLeftCorner
-              resolutions: resolutions, // résolutions
-              matrixIds: [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19' ], // ids des TileMatrix
-            }),
-          }),
+          source: this.props.IGNKey
+            ? new OLWMTSSource({
+              url: `https://wxs.ign.fr/${this.props.IGNKey}/geoportail/wmts`,
+              layer: 'ORTHOIMAGERY.ORTHOPHOTOS',
+              matrixSet: 'PM',
+              format: 'image/jpeg',
+              style: 'normal',
+              tileGrid: new OLWMTSTileGrid({
+                origin: [ -20037508, 20037508 ], // topLeftCorner
+                resolutions: resolutions, // résolutions
+                matrixIds: [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19' ], // ids des TileMatrix
+              }),
+            })
+            : new OLOSMSource(),
         }),
         this.vectorLayer,
       ],
@@ -239,7 +242,7 @@ class InteractiveMap extends React.Component {
 InteractiveMap.propTypes = {
   center: PropTypes.arrayOf(PropTypes.number),
   features: PropTypes.array,
-  IGNKey: PropTypes.string.isRequired,
+  IGNKey: PropTypes.oneOfType([ PropTypes.string, null ]),
   onFeaturesChange: PropTypes.func,
   selectedMode: PropTypes.oneOf(interactiveModes),
   zoom: PropTypes.number,
@@ -248,6 +251,7 @@ InteractiveMap.propTypes = {
 InteractiveMap.defaultProps = {
   center: [ 0, 0 ],
   features: [],
+  IGNKey: null,
   onFeaturesChange: () => null,
   selectedMode: interactiveModes[0],
   zoom: 5,
