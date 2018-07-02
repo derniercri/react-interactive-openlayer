@@ -16,8 +16,6 @@ import OLDrawInteraction from 'ol/interaction/draw'
 import OLTileLayer from 'ol/layer/tile'
 import OLVectorLayer from 'ol/layer/vector'
 
-import units from 'ol/proj/units'
-
 import OLOSMSource from 'ol/source/osm'
 import OLVectorSource from 'ol/source/vector'
 import OLWMTSSource from 'ol/source/wmts'
